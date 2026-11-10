@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 420" width="600" height="420">
+  <rect width="600" height="420" fill="#fbf9ff"/>
+  <rect x="18" y="18" width="564" height="384" rx="14" fill="none" stroke="#cbb8f2" stroke-width="6"/>
+  <rect x="34" y="34" width="532" height="352" rx="8" fill="none" stroke="#ffe58f" stroke-width="3" stroke-dasharray="10 8"/>
+  <circle cx="300" cy="118" r="38" fill="#ffe58f"/>
+  <path d="M300 92 l8 17 18 2 -13 12 4 18 -17 -9 -17 9 4 -18 -13 -12 18 -2z" fill="#7656c2"/>
+  <text x="300" y="200" text-anchor="middle" font-family="'Malgun Gothic','Apple SD Gothic Neo',sans-serif" font-size="30" font-weight="700" fill="#352e48">샘플 증빙 이미지</text>
+  <text x="300" y="244" text-anchor="middle" font-family="'Malgun Gothic','Apple SD Gothic Neo',sans-serif" font-size="17" fill="#6e6688">실제 자격증 스캔본(JPG·PNG)으로 바꿔 주세요</text>
+  <text x="300" y="300" text-anchor="middle" font-family="'Malgun Gothic','Apple SD Gothic Neo',sans-serif" font-size="15" fill="#7656c2">evidence 폴더에 파일을 넣고 data.js의 file 값을 바꾸면</text>
+  <text x="300" y="324" text-anchor="middle" font-family="'Malgun Gothic','Apple SD Gothic Neo',sans-serif" font-size="15" fill="#7656c2">이 자리에 그 파일이 보입니다</text>
+</svg>
