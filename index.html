@@ -1238,7 +1238,34 @@ body.hero-in .scroll-cue { opacity: 1; }
 .cosmos .fb1, .cosmos .fb2 { translate: calc(var(--mx, 0) * 24px) calc(var(--p, 0) * -.28px + var(--my, 0) * 24px); }
 .sky::after { background-position: 0 calc(var(--sky, 0) * 1px); }
 [data-parallax] { will-change: translate; }
+/* ── 프로젝트 자세히 보기: 고정 틀(Sticky) + Scroll Snap + Parallax ── */
+#pdlg.has-steps { scroll-snap-type: y proximity; scroll-padding-top: var(--sticky-h, 0px); overscroll-behavior: contain; }
+.d-sticky { position: sticky; top: 0; z-index: 5; background: var(--surface); border-radius: inherit; border-bottom-left-radius: 0; border-bottom-right-radius: 0; box-shadow: 0 10px 18px -16px rgb(28 42 87 / .45); }
+.d-sticky .d-head { border-radius: 30px 30px 0 0; }
+.s7-nav { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 10px 26px; border-bottom: 1px solid var(--line); scroll-snap-type: x proximity; }
+.s7-nav::-webkit-scrollbar { display: none; }
+.s7-nav a { flex: none; scroll-snap-align: center; display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 999px; border: 1px solid var(--line); font-size: .8rem; font-weight: 500; color: var(--ink-soft); text-decoration: none; white-space: nowrap; background: var(--surface);
+  transition: background-color var(--dur-2) var(--ease-out), color var(--dur-1), border-color var(--dur-1), transform var(--dur-2) var(--ease-spring); }
+.s7-nav a span { font-family: var(--font-latin); font-size: .72rem; color: var(--accent); }
+.s7-nav a:hover { color: var(--ink); border-color: var(--accent); }
+.s7-nav a.on { background: var(--accent); border-color: var(--accent); color: #fff; transform: scale(1.04); }
+.s7-nav a.on span { color: rgb(255 255 255 / .8); }
+.d-progress { position: absolute; left: 0; right: 0; bottom: -1px; height: 3px; background: linear-gradient(90deg, var(--ring-1), var(--ring-2)); transform-origin: 0 50%; transform: scaleX(0); }
+#pdlg .s7 { position: relative; scroll-snap-align: start; scroll-margin-top: var(--sticky-h, 0px); overflow: clip; }
+#pdlg .s7:focus { outline: none; }
+#pdlg .s7 > header, #pdlg .s7 > div { position: relative; z-index: 1; }
+/* 넓은 화면: 단계 이름표가 긴 본문 옆에 붙어서 함께 내려와요 */
+@media (min-width: 681px) {
+  #pdlg .s7 > header { position: sticky; top: calc(var(--sticky-h, 0px) + 14px); align-self: start; }
+}
+/* Parallax: 뒤에 깔린 큰 숫자는 글보다 느리게 (--sp: 아래 1 → 지나감 -1) */
+.s7-bg { position: absolute; right: 4px; top: 6px; z-index: 0; pointer-events: none; font-family: var(--font-latin); font-weight: 700; font-size: clamp(4rem, 12vw, 7.5rem); line-height: 1; color: var(--accent); opacity: .1;
+  translate: 0 calc(var(--sp, 0) * 70px); }
+@media (max-width: 767px) { .d-sticky .d-head { border-radius: 24px 24px 0 0; } }
+@media (max-width: 760px) { .s7-nav { padding-inline: 18px; } }
+
 @media (prefers-reduced-motion: reduce) {
+  .s7-bg { translate: none !important; }
   .cover-inner, .cosmos svg, [data-parallax] { translate: none !important; }
   .cover-inner { opacity: 1; }
   .tip { transition: none; }

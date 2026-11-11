@@ -211,4 +211,85 @@
   }
   if (RM && RM.addEventListener) RM.addEventListener('change', kick);
   readScroll();
+
+  /* ═════════ 프로젝트 자세히 보기: 고정 틀 + Scroll Snap + Parallax ═════════
+     긴 7단계 글을 읽기 쉽게:
+     ① 제목 줄과 ‘01~07 단계 바로가기’를 위에 고정(Sticky)하고, 지금 읽는 단계를 표시해요 (Scroll Spy + 진행 바).
+     ② 단계 이름표는 긴 본문 옆에 붙어 따라 내려와요 (넓은 화면).
+     ③ 단계 경계 근처에서 멈추면 그 단계 처음에 살짝 맞춰 줘요 (Scroll Snap · proximity — 긴 글은 자유롭게 읽혀요).
+     ④ 단계마다 뒤에 깔린 큰 숫자가 글보다 느리게 움직여요 (Parallax). */
+  const pdlg = $('pdlg'), pbody = $('pdlg-body');
+  if (pdlg && pbody) {
+    let secs = [], chips = [], bar = null, active = -1, spyRaf = 0, forced = null;   // forced: 바로가기로 고른 단계(직접 스크롤하기 전까지 유지)
+    const ro = 'ResizeObserver' in window ? new ResizeObserver(() => {
+      const st = pbody.querySelector('.d-sticky');
+      if (st) pdlg.style.setProperty('--sticky-h', st.offsetHeight + 'px');
+    }) : null;
+
+    function setActive(i) {
+      if (i === active) return;
+      active = i;
+      chips.forEach((c, k) => { c.classList.toggle('on', k === i); if (k === i) c.setAttribute('aria-current', 'step'); else c.removeAttribute('aria-current'); });
+      const c = chips[i], nav = c && c.parentElement;
+      if (nav) nav.scrollTo({ left: c.offsetLeft - nav.clientWidth / 2 + c.offsetWidth / 2, behavior: reduce() ? 'auto' : 'smooth' });
+    }
+    function spy() {
+      spyRaf = 0;
+      if (!secs.length) return;
+      const top = pdlg.getBoundingClientRect().top + (parseFloat(getComputedStyle(pdlg).getPropertyValue('--sticky-h')) || 0);
+      const vh = pdlg.clientHeight;
+      let cur = 0;
+      secs.forEach((s, i) => {
+        const r = s.getBoundingClientRect();
+        if (r.top - top < 80) cur = i;
+        if (!reduce()) s.style.setProperty('--sp', Math.max(-1, Math.min(1, (r.top - top) / vh)).toFixed(3));   // -1(지나감) ~ 1(아직 아래)
+      });
+      const max = pdlg.scrollHeight - pdlg.clientHeight;
+      if (max > 0 && pdlg.scrollTop >= max - 4) cur = secs.length - 1;   // 맨 끝에 닿으면 마지막 단계
+      setActive(forced != null ? forced : cur);
+      if (bar) bar.style.transform = `scaleX(${max > 0 ? pdlg.scrollTop / max : 1})`;
+    }
+    pdlg.addEventListener('scroll', () => { if (!spyRaf) spyRaf = requestAnimationFrame(spy); }, { passive: true });
+    ['wheel', 'touchstart', 'keydown', 'pointerdown'].forEach((t) => pdlg.addEventListener(t, (e) => { if (!(e.target.closest && e.target.closest('.s7-nav'))) forced = null; }, { passive: true }));
+
+    function enhanceProject() {
+      const head = pbody.querySelector(':scope > .d-head');
+      secs = Array.from(pbody.querySelectorAll('.steps7 > .s7'));
+      if (!head || pbody.querySelector('.d-sticky')) return;
+      const sticky = document.createElement('div');
+      sticky.className = 'd-sticky';
+      head.before(sticky); sticky.appendChild(head);
+      if (secs.length > 1) {
+        const nav = document.createElement('nav');
+        nav.className = 's7-nav'; nav.setAttribute('aria-label', '단계 바로가기');
+        nav.innerHTML = secs.map((s, i) => {
+          const n = s.querySelector('header .n'), b = s.querySelector('header b');
+          s.id = 's7-' + i;
+          s.insertAdjacentHTML('afterbegin', `<span class="s7-bg" aria-hidden="true">${n ? n.textContent : i + 1}</span>`);
+          return `<a href="#s7-${i}" data-s7="${i}"><span>${n ? n.textContent : ''}</span>${b ? b.textContent : ''}</a>`;
+        }).join('');
+        sticky.appendChild(nav);
+        chips = Array.from(nav.querySelectorAll('a'));
+      } else chips = [];
+      bar = document.createElement('span'); bar.className = 'd-progress'; bar.setAttribute('aria-hidden', 'true');
+      sticky.appendChild(bar);
+      pdlg.classList.add('has-steps');
+      pdlg.style.setProperty('--sticky-h', sticky.offsetHeight + 'px');
+      if (ro) { ro.disconnect(); ro.observe(sticky); }
+      active = -1; forced = null; pdlg.scrollTop = 0; spy();
+    }
+    // 단계 바로가기: 주소(#)는 바꾸지 않고 대화상자 안에서만 부드럽게 이동
+    pbody.addEventListener('click', (e) => {
+      const a = e.target.closest('.s7-nav a'); if (!a) return;
+      e.preventDefault(); e.stopPropagation();
+      const s = secs[+a.dataset.s7]; if (!s) return;
+      forced = +a.dataset.s7; setActive(forced);
+      const sh = parseFloat(getComputedStyle(pdlg).getPropertyValue('--sticky-h')) || 0;
+      const y = s.getBoundingClientRect().top - pdlg.getBoundingClientRect().top + pdlg.scrollTop - sh;
+      pdlg.scrollTo({ top: y, behavior: reduce() ? 'auto' : 'smooth' });
+      s.setAttribute('tabindex', '-1'); s.focus({ preventScroll: true });
+    }, true);
+    new MutationObserver(enhanceProject).observe(pbody, { childList: true });
+    pdlg.addEventListener('close', () => { if (ro) ro.disconnect(); });
+  }
 })();
