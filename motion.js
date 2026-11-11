@@ -215,7 +215,7 @@
   /* ═════════ 프로젝트 자세히 보기: 고정 틀 + Scroll Snap + Parallax ═════════
      긴 7단계 글을 읽기 쉽게:
      ① 제목 줄과 ‘01~07 단계 바로가기’를 위에 고정(Sticky)하고, 지금 읽는 단계를 표시해요 (Scroll Spy + 진행 바).
-     ② 단계 이름표는 긴 본문 옆에 붙어 따라 내려와요 (넓은 화면).
+     ② 단계마다 같은 높이의 틀에 담아 칸 안에서 따로 스크롤 → 일곱 칸의 전체 모양이 한눈에 보여요 (넘치면 ‘전체 보기’로 펼치기).
      ③ 단계 경계 근처에서 멈추면 그 단계 처음에 살짝 맞춰 줘요 (Scroll Snap · proximity — 긴 글은 자유롭게 읽혀요).
      ④ 단계마다 뒤에 깔린 큰 숫자가 글보다 느리게 움직여요 (Parallax). */
   const pdlg = $('pdlg'), pbody = $('pdlg-body');
@@ -252,6 +252,45 @@
     pdlg.addEventListener('scroll', () => { if (!spyRaf) spyRaf = requestAnimationFrame(spy); }, { passive: true });
     ['wheel', 'touchstart', 'keydown', 'pointerdown'].forEach((t) => pdlg.addEventListener(t, (e) => { if (!(e.target.closest && e.target.closest('.s7-nav'))) forced = null; }, { passive: true }));
 
+    /* 칸마다 따로 스크롤: 본문을 같은 높이의 틀에 담고, 넘치는 칸에만 ‘더 보기’ 안내·진행 바·펼치기 버튼을 달아요 */
+    const boxRO = 'ResizeObserver' in window ? new ResizeObserver((ents) => ents.forEach((en) => paintBox(en.target))) : null;
+    function paintBox(box) {
+      const sec = box.closest('.s7'); if (!sec) return;
+      const over = box.scrollHeight - box.clientHeight > 4;
+      const open = sec.classList.contains('open');
+      box.classList.toggle('more', over);
+      box.classList.toggle('at-end', box.scrollTop >= box.scrollHeight - box.clientHeight - 4);
+      const max = box.scrollHeight - box.clientHeight;
+      sec.style.setProperty('--bp', max > 0 ? (box.scrollTop / max).toFixed(3) : 1);
+      const hint = sec.querySelector('.s7-hint'), btn = sec.querySelector('.s7-more');
+      if (hint) hint.hidden = !over;
+      if (btn) btn.hidden = !over && !open;
+      box.tabIndex = over ? 0 : -1;               // 넘칠 때만 키보드(↑↓)로 칸 안을 스크롤
+    }
+    function setupBoxes() {
+      if (boxRO) boxRO.disconnect();
+      secs.forEach((sec) => {
+        const box = sec.querySelector(':scope > div'), header = sec.querySelector(':scope > header');
+        if (!box || box.classList.contains('s7-scroll')) return;
+        const title = header && header.querySelector('b') ? header.querySelector('b').textContent : '';
+        box.classList.add('s7-scroll'); box.setAttribute('role', 'region'); box.setAttribute('aria-label', title + ' 내용');
+        if (header) header.insertAdjacentHTML('beforeend', `<button class="s7-more" type="button" aria-expanded="false" hidden>전체 보기</button>`);
+        box.insertAdjacentHTML('afterend', `<div class="s7-hint" aria-hidden="true" hidden><span>스크롤해서 더 보기</span><i></i></div>`);
+        box.addEventListener('scroll', () => paintBox(box), { passive: true });
+        if (boxRO) { boxRO.observe(box); Array.from(box.children).forEach((c) => boxRO.observe(c)); }   // 영상·글꼴이 늦게 와서 높이가 바뀌어도 다시 계산
+        paintBox(box);
+      });
+    }
+    pbody.addEventListener('click', (e) => {
+      const b = e.target.closest('.s7-more'); if (!b) return;
+      const sec = b.closest('.s7'), box = sec.querySelector('.s7-scroll');
+      const open = !sec.classList.contains('open');
+      sec.classList.toggle('open', open);
+      b.setAttribute('aria-expanded', String(open)); b.textContent = open ? '틀에 맞추기' : '전체 보기';
+      if (!open) { box.scrollTop = 0; sec.scrollIntoView({ block: 'nearest', behavior: reduce() ? 'auto' : 'smooth' }); }
+      paintBox(box); spy();
+    });
+
     function enhanceProject() {
       const head = pbody.querySelector(':scope > .d-head');
       secs = Array.from(pbody.querySelectorAll('.steps7 > .s7'));
@@ -274,6 +313,7 @@
       bar = document.createElement('span'); bar.className = 'd-progress'; bar.setAttribute('aria-hidden', 'true');
       sticky.appendChild(bar);
       pdlg.classList.add('has-steps');
+      setupBoxes();
       pdlg.style.setProperty('--sticky-h', sticky.offsetHeight + 'px');
       if (ro) { ro.disconnect(); ro.observe(sticky); }
       active = -1; forced = null; pdlg.scrollTop = 0; spy();
@@ -290,6 +330,6 @@
       s.setAttribute('tabindex', '-1'); s.focus({ preventScroll: true });
     }, true);
     new MutationObserver(enhanceProject).observe(pbody, { childList: true });
-    pdlg.addEventListener('close', () => { if (ro) ro.disconnect(); });
+    pdlg.addEventListener('close', () => { if (ro) ro.disconnect(); if (boxRO) boxRO.disconnect(); });
   }
 })();
