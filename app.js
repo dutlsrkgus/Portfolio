@@ -145,6 +145,20 @@ window.PORTFOLIO = ${body};
     setExpression(e);
     if (Math.random() < 0.4) wave();
   }
+  /* 표지 캐릭터: 1초마다 자동으로 한 동작씩 (콩콩 뛰기 → 흔들기 → 기울기 → 말랑 → 빙글 → 둥실…)
+     4초마다 표정도 바뀌어요. 표지가 화면 밖이거나 탭이 가려졌거나 인트로 중이면 쉬어요. */
+  const ACTS = ['hop', 'wiggle', 'lean-l', 'squish', 'lean-r', 'spin', 'float'];
+  let actI = 0;
+  setInterval(() => {
+    const svg = document.querySelector('#h-btn svg.chara'), cover = document.querySelector('.cover'), warp = $('warp');
+    if (!svg || reduceMotion || document.hidden || !cover || cover.hidden || cover.classList.contains('is-off')) return;
+    if (warp && !warp.hidden) return;
+    ACTS.forEach((a) => svg.classList.remove('act-' + a));
+    void svg.getBoundingClientRect();              // 같은 동작이 다시 와도 처음부터 재생
+    svg.classList.add('act-' + ACTS[actI % ACTS.length]);
+    if (++actI % 4 === 0) nextMood();
+  }, 1000);
+
   window.CharaFx = { mood: (e) => setExpression(e), wave: () => wave() };   // fx.js(인트로)에서 사용
   $('h-btn').innerHTML = window.Chara.svg();
   $('c-btn').innerHTML = window.Chara.svg();
@@ -296,16 +310,16 @@ window.PORTFOLIO = ${body};
         <span class="t"><b>${p.award ? `<span class="badge award">${esc(p.award)}</span>` : ''}${esc(p.title)}</b><span>${esc(p.summary)}</span></span>
         <span class="m">${p.date ? dot(p.date) : '날짜 미기재'}<br>${esc(p.org)}</span>
       </button></li>`;
+    const awSub = (g) => { const aw = g.filter((p) => p.award).length; return `${g.length}건${aw ? ` · 수상 ${aw}건` : ''}`; };
     if (filt === 'all') {
-      // 분야(KDC)별로 묶고, 묶음 안에서는 최근 순
+      // 분야(KDC)별로 묶고, 묶음마다 칸 안에서 따로 스크롤 · 묶음 안에서는 최근 순
       $('plist').innerHTML = Object.entries(C).map(([k, c]) => {
         const g = list.filter((p) => p.comp === k);
-        if (!g.length) return '';
-        const aw = g.filter((p) => p.award).length;
-        return `<li class="group-h"><span class="code">${esc(c.code)}</span><b>${esc(c.label)}</b><small>${g.length}건${aw ? ` · 수상 ${aw}건` : ''}</small></li>${g.map(row).join('')}`;
+        return g.length ? areaBox(c.code, c.label, awSub(g), g.map(row).join('')) : '';
       }).join('') || '<li class="empty-row">공개 프로젝트가 없어요.</li>';
     } else {
-      $('plist').innerHTML = list.map(row).join('') || '<li class="empty-row">이 분류의 공개 프로젝트가 없어요.</li>';
+      const label = filt === 'award' ? '수상작' : C[filt].label, code = filt === 'award' ? '' : C[filt].code;
+      $('plist').innerHTML = list.length ? areaBox(code, label, awSub(list), list.map(row).join('')) : '<li class="empty-row">이 분류의 공개 프로젝트가 없어요.</li>';
     }
   }
   $('filters').addEventListener('click', (e) => {
@@ -360,13 +374,26 @@ window.PORTFOLIO = ${body};
     $('ev-sum').innerHTML = `<span class="pill lav">전체 ${EV.length}건</span><span class="pill yel">바로 보기 ${evOk}건</span><span class="pill">요청 시 제공 ${EV.length - evOk}건</span>`;
     const groups = ['전체', '프로젝트', '경력', '봉사', '자격증'];
     $('ev-filters').innerHTML = groups.map((g) => `<button class="filter" type="button" id="ef-${g}" data-ef="${g}" aria-pressed="${g === evFilt}">${g}<span class="n">${g === '전체' ? EV.length : EV.filter((e) => e.group === g).length}</span></button>`).join('');
-    const list = EV.map((e, i) => [e, i]).filter(([e]) => evFilt === '전체' || e.group === evFilt);
-    $('evlist').innerHTML = list.length ? list.map(([e, i]) => `
+    const evRow = ([e, i]) => `
       <li class="ev-row">
         <span class="ev-kind">${esc(e.kind)}</span>
         <span class="ev-t"><b>${esc(e.title)}</b><span>${esc(e.group)} · ${esc(e.source)}</span></span>
         ${viewable(e) ? `<button type="button" class="btn btn-lav btn-sm" data-ev="${i}">${e.file ? '바로 보기' : '링크 열기'}</button>` : `<span class="ev-note">${esc(e.note || '요청 시 제공')}</span>`}
-      </li>`).join('') : '<li class="ev-row"><span class="ev-t"><span>이 분류에는 아직 증빙이 없어요.</span></span></li>';
+      </li>`;
+    // 출처(프로젝트·경력·봉사·자격증)별로 묶고, 묶음마다 칸 안에서 따로 스크롤
+    const html = groups.slice(1).filter((g) => evFilt === '전체' || g === evFilt).map((g) => {
+      const items = EV.map((e, i) => [e, i]).filter(([e]) => e.group === g);
+      if (!items.length) return '';
+      const ok = items.filter(([e]) => viewable(e)).length;
+      return areaBox('', g, `${items.length}건${ok ? ` · 바로 보기 ${ok}건` : ''}`, items.map(evRow).join(''));
+    }).join('');
+    $('evlist').innerHTML = html || '<li class="ev-row"><span class="ev-t"><span>이 분류에는 아직 증빙이 없어요.</span></span></li>';
+  }
+  /* 영역 한 칸: 머리(분류 이름·건수·읽은 만큼 차는 막대) + 칸 안에서만 스크롤되는 목록 + ‘더 보기’ 안내 */
+  function areaBox(code, label, sub, rows) {
+    return `<li class="area"><div class="group-h area-h">${code ? `<span class="code">${esc(code)}</span>` : ''}<b>${esc(label)}</b><small>${sub}</small><i class="area-bar" aria-hidden="true"></i></div>
+      <ul class="area-list" role="list" aria-label="${esc(label)} 목록">${rows}</ul>
+      <span class="area-hint" aria-hidden="true">스크롤해서 더 보기 ↓</span></li>`;
   }
   $('ev-filters').addEventListener('click', (e) => { const b = e.target.closest('[data-ef]'); if (!b) return; evFilt = b.dataset.ef; renderEvidence(); });
 

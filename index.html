@@ -1290,6 +1290,86 @@ body.hero-in .scroll-cue { opacity: 1; }
   .cover-inner { opacity: 1; }
   .tip { transition: none; }
 }
+
+/* ════════════ 사이드바 접기 오류 수정 ════════════
+   접힌 상태에서 이름·역할 글자가 높이를 차지하고 프로필 칸의 그림자가 남아 빈 상자처럼 보이던 문제 */
+@media (min-width: 768px) {
+  body.side-collapsed .side-me { background: none; box-shadow: none; }
+  body.side-collapsed .side-me .side-label { display: none; }
+}
+
+/* ════════════ 표지 캐릭터: 1초마다 한 동작씩 (app.js가 act-* 를 붙여요) ════════════ */
+.cover-chara svg.chara { transform-origin: 50% 92%; }
+.cover-chara svg.chara.act-hop { animation: actHop .9s cubic-bezier(.3, .7, .4, 1); }
+.cover-chara svg.chara.act-wiggle { animation: actWiggle .9s ease-in-out; }
+.cover-chara svg.chara.act-lean-l { animation: actLeanL .9s ease-in-out; }
+.cover-chara svg.chara.act-lean-r { animation: actLeanR .9s ease-in-out; }
+.cover-chara svg.chara.act-squish { animation: actSquish .9s cubic-bezier(.3, 1.4, .5, 1); }
+.cover-chara svg.chara.act-spin { animation: actSpin .9s cubic-bezier(.5, 0, .3, 1); }
+.cover-chara svg.chara.act-float { animation: actFloat .9s ease-in-out; }
+@keyframes actHop { 0%, 100% { transform: none; } 18% { transform: scale(1.08, .9); } 45% { transform: translateY(-24px) scale(.95, 1.06); } 72% { transform: translateY(0) scale(1.06, .94); } 86% { transform: scale(.98, 1.02); } }
+@keyframes actWiggle { 0%, 100% { transform: none; } 20% { transform: rotate(-9deg); } 45% { transform: rotate(8deg); } 70% { transform: rotate(-5deg); } 88% { transform: rotate(2deg); } }
+@keyframes actLeanL { 0%, 100% { transform: none; } 40%, 60% { transform: translateX(-16px) rotate(-8deg); } }
+@keyframes actLeanR { 0%, 100% { transform: none; } 40%, 60% { transform: translateX(16px) rotate(8deg); } }
+@keyframes actSquish { 0%, 100% { transform: none; } 30% { transform: scale(1.12, .86); } 60% { transform: scale(.92, 1.1); } 80% { transform: scale(1.03, .97); } }
+@keyframes actSpin { 0% { transform: perspective(600px) rotateY(0); } 100% { transform: perspective(600px) rotateY(360deg); } }
+@keyframes actFloat { 0%, 100% { transform: none; } 50% { transform: translateY(-16px) rotate(4deg); } }
+
+/* ════════════ 배경 더 움직이기 ════════════ */
+/* 별: 더 크게 반짝이며 살짝 돌아요 */
+.twinkle { animation: twinkle2 2.4s ease-in-out infinite; }
+@keyframes twinkle2 { 0%, 100% { opacity: .2; transform: scale(.6) rotate(0); } 50% { opacity: 1; transform: scale(1.35) rotate(45deg); } }
+/* 별똥별: 세 개가 번갈아 더 자주 */
+.shooting { animation-duration: 6s; animation-delay: 1s; }
+.shooting.s2 { top: 34%; left: 18%; width: 110px; animation-duration: 7.5s; animation-delay: 3.5s; }
+.shooting.s3 { top: 4%; left: 40%; width: 90px; animation-duration: 9s; animation-delay: 6s; }
+/* 하늘의 빛 띠는 천천히 일렁이고, 잔별은 숨 쉬듯 밝아졌다 어두워져요 */
+.sky::before { animation: aurora 14s ease-in-out infinite; will-change: transform; }
+@keyframes aurora { 0%, 100% { transform: rotate(-24deg) translateY(0); } 50% { transform: rotate(-19deg) translateY(-5%); } }
+.sky::after { animation: starPulse 3.6s ease-in-out infinite alternate; }
+@keyframes starPulse { from { opacity: .45; } to { opacity: 1; } }
+/* 유리 구슬: 위아래만이 아니라 사방으로 떠다녀요 */
+.orb3d { animation: orbRoam 7s ease-in-out infinite; }
+.orb3d.o2 { animation-duration: 6s; } .orb3d.o3 { animation-duration: 8.5s; } .orb3d.o4 { animation-duration: 10s; } .orb3d.o5 { animation-duration: 5s; }
+@keyframes orbRoam { 0%, 100% { transform: translate(0, 0) scale(1); } 25% { transform: translate(18px, -22px) scale(1.05); } 50% { transform: translate(-6px, -40px) scale(.96); } 75% { transform: translate(-20px, -14px) scale(1.03); } }
+/* 구름: 옆으로 천천히 흘러가요 (크기는 --s로 유지) */
+.cloud3d { --s: 1; animation: cloudRoamR 20s ease-in-out infinite; }
+.cloud3d.c2 { --s: 1.2; animation-name: cloudRoamL; animation-duration: 24s; }
+.cloud3d.c3 { --s: .9; animation-duration: 28s; }
+@media (max-width: 767px) { .cloud3d { --s: .7; } .cloud3d.c2 { --s: .84; } .cloud3d.c3 { --s: .63; } }
+@keyframes cloudRoamR { 0%, 100% { transform: translate(0, 0) scale(var(--s)); } 50% { transform: translate(80px, -18px) scale(var(--s)); } }
+@keyframes cloudRoamL { 0%, 100% { transform: translate(0, 0) scale(var(--s)); } 50% { transform: translate(-80px, -14px) scale(var(--s)); } }
+/* 표지 행성·달·책: 더 크게, 더 빠르게 둥실 */
+.cosmos .planet, .cosmos .moon, .cosmos .fbook { animation-name: drift2; }
+.cosmos .planet { animation-duration: 7s; } .cosmos .moon { animation-duration: 8s; } .cosmos .fbook { animation-duration: 5s; }
+@keyframes drift2 { 0%, 100% { transform: translate(0, 0) rotate(0); } 33% { transform: translate(10px, -20px) rotate(6deg); } 66% { transform: translate(-9px, -9px) rotate(-5deg); } }
+/* 별자리: 점선이 흐르고 깜빡여요 */
+.cosmos .constellation { animation: constel 3s ease-in-out infinite; }
+.cosmos .constellation path { animation: dashFlow 2s linear infinite; }
+@keyframes constel { 50% { opacity: .45; } }
+@keyframes dashFlow { to { stroke-dashoffset: -28; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .twinkle, .shooting, .sky::before, .sky::after, .cosmos svg, .cosmos .constellation path, .cover-chara svg.chara { animation: none !important; }
+}
+
+/* ════════════ 영역별 스크롤 칸 (프로젝트 분야별 · 증빙 출처별) ════════════ */
+.plist, .evlist { border-top: 0; display: grid; gap: 18px; }
+.area { position: relative; list-style: none; margin: 0; border: 1px solid var(--line); border-radius: 22px; background: var(--surface); box-shadow: var(--shadow); overflow: hidden; }
+.area[hidden] { display: none; }
+.area > .area-h { position: relative; padding: 16px 20px 12px; border-bottom: 1px solid var(--line); }
+.area-bar { position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: linear-gradient(90deg, var(--accent), #f39cc3); transform-origin: 0 50%; transform: scaleX(var(--ap, 1)); transition: transform .12s linear; }
+.area-list { list-style: none; margin: 0; padding: 0 8px; max-height: var(--area-h, min(430px, 62vh)); overflow-y: auto; overscroll-behavior-y: auto; scrollbar-width: thin; scrollbar-color: var(--ring-1) transparent; }
+.area-list::-webkit-scrollbar { width: 6px; }
+.area-list::-webkit-scrollbar-thumb { background: var(--ring-1); border-radius: 3px; }
+.area-list:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.area-list > li:last-child .prow, .area-list > .ev-row:last-child { border-bottom: 0; }
+.area.more:not(.at-end) .area-list { -webkit-mask-image: linear-gradient(180deg, #000 calc(100% - 56px), transparent); mask-image: linear-gradient(180deg, #000 calc(100% - 56px), transparent); }
+.area-hint { display: none; position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); padding: 3px 12px; border-radius: 999px; background: var(--accent); color: #fff; font-size: .74rem; font-weight: 700; pointer-events: none; box-shadow: 0 6px 14px rgb(47 91 234 / .3); animation: hintBob 1.6s ease-in-out infinite; }
+.area.more:not(.at-end) .area-hint { display: block; }
+@keyframes hintBob { 50% { transform: translate(-50%, -4px); } }
+@media (max-width: 767px) { .area-list { --area-h: min(380px, 58vh); } .area > .area-h { padding: 14px 16px 10px; } }
+@media (prefers-reduced-motion: reduce) { .area-hint { animation: none; } .area-bar { transition: none; } }
 </style>
 
 <script>(function(){var d=document.documentElement;try{var t=localStorage.getItem('gahyeon-theme');if(t==='dark'||t==='light')d.setAttribute('data-theme',t);}catch(e){}d.classList.add('js');var h=location.hash.slice(1);var r=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;if((!h||h==='home')&&!r)d.classList.add('warp-boot');})();</script>
@@ -1300,7 +1380,7 @@ body.hero-in .scroll-cue { opacity: 1; }
   <svg class="twinkle lav" style="left:22%;top:74%;animation-delay:-.6s" viewBox="0 0 20 20"><path d="M10 0Q11.8 8.2 20 10Q11.8 11.8 10 20Q8.2 11.8 0 10Q8.2 8.2 10 0Z"/></svg>
   <svg class="twinkle" style="left:90%;top:68%;animation-delay:-2.8s" viewBox="0 0 20 20"><path d="M10 0Q11.8 8.2 20 10Q11.8 11.8 10 20Q8.2 11.8 0 10Q8.2 8.2 10 0Z"/></svg>
   <svg class="twinkle" style="left:40%;top:8%;animation-delay:-1.7s" viewBox="0 0 20 20"><path d="M10 0Q11.8 8.2 20 10Q11.8 11.8 10 20Q8.2 11.8 0 10Q8.2 8.2 10 0Z"/></svg>
-  <span class="shooting"></span>
+  <span class="shooting"></span><span class="shooting s2"></span><span class="shooting s3"></span>
   <span class="orb3d o1"></span><span class="orb3d o2 cobalt"></span><span class="orb3d o3"></span><span class="orb3d o4 cobalt"></span><span class="orb3d o5"></span>
   <span class="cloud3d c1"></span><span class="cloud3d c2"></span><span class="cloud3d c3"></span>
 </div>

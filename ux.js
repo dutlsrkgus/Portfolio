@@ -93,6 +93,7 @@
     const to = a.getAttribute('href').slice(1);
     if (!PAGES.includes(to) || to === (location.hash.slice(1) || 'home')) return;
     e.preventDefault();
+    if (wipe.classList.contains('in')) return;      // 전환 중에 여러 번 눌러도 한 번만 넘어가요
     wipe.classList.remove('out'); wipe.classList.add('in');
     setTimeout(() => {
       location.hash = to;
@@ -178,15 +179,11 @@
     const list = $('plist'); if (!list || !q) return;
     const words = q.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
     let shown = 0;
-    list.querySelectorAll('li:not(.group-h):not(.empty-row):not(.search-empty)').forEach((li) => {
+    list.querySelectorAll('.area-list > li').forEach((li) => {
       const ok = !words.length || words.every((w) => li.textContent.toLowerCase().includes(w));
       li.hidden = !ok; if (ok) shown++;
     });
-    list.querySelectorAll('li.group-h').forEach((h) => {
-      let n = h.nextElementSibling, any = false;
-      while (n && !n.classList.contains('group-h')) { if (!n.hidden) any = true; n = n.nextElementSibling; }
-      h.hidden = !any;
-    });
+    list.querySelectorAll('li.area').forEach((a) => { a.hidden = !a.querySelector('.area-list > li:not([hidden])'); });
     let empty = list.querySelector('.search-empty');
     if (words.length && !shown) {
       if (!empty) { empty = document.createElement('li'); empty.className = 'search-empty'; list.appendChild(empty); }

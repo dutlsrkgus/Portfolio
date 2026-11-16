@@ -36,6 +36,26 @@
   const listMO = new MutationObserver((recs) => { new Set(recs.map((r) => r.target)).forEach(numberList); });
   LISTS.forEach((id) => { const el = $(id); if (el) { numberList(el); listMO.observe(el, { childList: true }); } });
 
+  /* ═════════ 영역별 스크롤 칸 (프로젝트 분야별 · 증빙 출처별) ═════════
+     칸이 넘칠 때만 아래쪽 흐림·‘스크롤해서 더 보기’ 안내를 켜고, 머리의 막대가 읽은 만큼 차올라요. */
+  function paintArea(box) {
+    const a = box.closest('.area'); if (!a) return;
+    const max = box.scrollHeight - box.clientHeight, over = max > 4;
+    a.classList.toggle('more', over);
+    a.classList.toggle('at-end', !over || box.scrollTop >= max - 4);
+    a.style.setProperty('--ap', over ? (box.scrollTop / max).toFixed(3) : 1);
+    box.tabIndex = over ? 0 : -1;                   // 넘칠 때만 키보드(↑↓)로 칸 안을 스크롤
+  }
+  const areaRO = 'ResizeObserver' in window ? new ResizeObserver((ents) => ents.forEach((en) => paintArea(en.target))) : null;
+  function setupAreas(list) {
+    list.querySelectorAll('.area-list').forEach((box) => { if (areaRO) areaRO.observe(box); paintArea(box); });
+  }
+  const paintAll = () => document.querySelectorAll('.area-list').forEach(paintArea);
+  document.addEventListener('scroll', (e) => { const t = e.target; if (t.classList && t.classList.contains('area-list')) paintArea(t); }, { capture: true, passive: true });
+  ['plist', 'evlist'].forEach((id) => { const el = $(id); if (el) { setupAreas(el); new MutationObserver(() => setupAreas(el)).observe(el, { childList: true }); } });
+  const pq = $('pq'); if (pq) pq.addEventListener('input', () => requestAnimationFrame(paintAll));
+  addEventListener('hashchange', () => setTimeout(paintAll, 650));
+
   /* ═════════ Loop ═════════
      반복 움직임(별 반짝임·둥실·마퀴·수상 배지 반짝임·스크롤 안내)은 화면 밖이거나 탭이 가려지면 멈춰 둬요. */
   const cover = document.querySelector('.cover');
